@@ -1,0 +1,63 @@
+#!/bin/sh
+cd "${0%/*}" || exit                                # Run from this directory
+. ${WM_PROJECT_DIR:?}/bin/tools/RunFunctions        # Tutorial run functions
+. ${WM_PROJECT_DIR:?}/bin/tools/CleanFunctions      # Tutorial clean functions
+#------------------------------------------------------------------------------
+
+# create Mesh from blockMesh
+#blockMesh
+# Turbulence closure models
+models="
+blasiusFoam
+mySimpleFoam
+"
+
+if :
+then
+    for model in $models
+    do
+        echo "Processing model: $model"
+	# create Mesh from blockMesh
+	cp system/blockMeshDict.$model system/blockMeshDict
+	runApplication blockMesh
+
+        sed -e "s/APP_USED/$model/g" \
+            system/controlDict.template \
+          > system/controlDict
+	cp -r 0.$model 0
+	cp system/fvSchemes.$model system/fvSchemes
+	cp system/fvSolution.$model system/fvSolution
+
+        #runApplication $(getApplication)
+        runApplication -s "$model" $(getApplication)
+
+        timeDir=$(foamListTimes -latestTime)
+	cp 0/p 300/p
+	postProcess -func sampleDict -latestTime
+	simpleFoam -postProcess -func wallShearStress -latestTime
+	postProcess -func sampleLowerPatch -latestTime
+
+        # Store results in directory of the same name as the model
+        modelDir="$model"
+        rm -rf "$modelDir"
+        mkdir "$modelDir"
+        mv -f log* "$timeDir" postProcessing "$modelDir"
+	rm -rf 0
+
+        cleanTimeDirectories
+    done
+fi
+
+#------------------------------------------------------------------------------
+#./Allplot
+#simple testing scripts
+#gnuplot plotVelocities.gp
+#gnuplot plotTemperatures.gp
+gnuplot plotSkinFriction.gp
+gnuplot plotVelocities_all.gp
+gnuplot plotTemperatures_all.gp
+#xdg-open velocity_all.png
+#simpleFoam | tee log.case
+#./extract
+#./postPro
+#
