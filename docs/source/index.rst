@@ -20,7 +20,7 @@ Guide
    :maxdepth: 2
    :caption: Contents:
 
-
+   help
 
 Indices and tables
 ==================
