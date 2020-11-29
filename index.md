@@ -1,4 +1,5 @@
 # blasiusFoam
+Complete documentation at [blasiusfoam.readthedocs.io][https://blasiusfoam.readthedocs.io]
 A solver for incompressible laminar flow and heat transfer on a flat plate
 - uses blasius equation
 - ./Allwmake to compile the solver
